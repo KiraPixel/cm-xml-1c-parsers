@@ -1,0 +1,15 @@
+services:
+  cashing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/ref
+    environment:
+      SQLALCHEMY_DATABASE_URL: ${SQLALCHEMY_DATABASE_URL}
+      MAIL_MAIL: ${MAIL_MAIL}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+    stdin_open: true
+    tty: true
+    restart: always
