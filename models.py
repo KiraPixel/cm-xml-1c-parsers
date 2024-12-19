@@ -10,13 +10,14 @@ class Transport(Base):
     __tablename__ = 'transport'
     id = Column(Integer, primary_key=True)
     storage_id = Column(Integer, nullable=False)
-    model_id = Column(Integer, ForeignKey('transport_model.id'), nullable=False)
+    model_id = Column(Integer, nullable=False)
     uNumber = Column(Text)
     x = Column(Float)
     y = Column(Float)
     customer = Column(Text)
     manager = Column(Text)
-    
+
+
 class Storage(Base):
     __tablename__ = 'storage'
 
@@ -31,7 +32,7 @@ class Storage(Base):
 class TransportModel(Base):
     __tablename__ = 'transport_model'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Text, primary_key=True)
     type = Column(String(100))
     name = Column(String(100))
     lift_type = Column(String(100))
@@ -61,10 +62,6 @@ class TransferTasks(Base):
     old_client = Column(String(100))
     new_client = Column(String(100))
     date = Column(Integer())
-
-
-# Индекс для поля uNumber в Transport
-Index('idx_transport_unumber', Transport.uNumber)
 
 
 def get_engine():
