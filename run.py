@@ -2,6 +2,8 @@ import time
 from datetime import datetime
 import xml_parser
 import exchange
+from db_updater import reset_parser_1c
+
 
 def main():
     while True:
@@ -16,6 +18,7 @@ def main():
         else:
             print(f"{current_time} | Начинаю обработку лотов")
             xml_parser.parse_and_process_xml(xml_data)
+            reset_parser_1c()
             print(f"{current_time} | Закончил обработку лотов")
 
         # Ждем 10 минут

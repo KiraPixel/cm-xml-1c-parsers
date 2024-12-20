@@ -2,7 +2,6 @@ import xml.etree.ElementTree as ET
 from idlelib.pyparse import trans
 
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
 from models import Transport, Storage, TransportModel, ParserTasks, get_engine, create_session  # Импорт моделей из вашего файла с базой
 import unicodedata
 import html
@@ -26,12 +25,14 @@ def parse_float(value):
         return None
 
 def parse_and_process_xml(xml_data):
-    engine = get_engine()
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    engine = db_updater.engine
+    session = create_session(engine)
 
     try:
         root = ET.fromstring(xml_data)
+
+        all_transports = session.query(Transport.uNumber).all()
+        transport_numbers_in_db = {t[0] for t in all_transports}
 
         #Проходим по элементам "ДанныеПоЛоту"
         for lot in root.findall('ДанныеПоЛоту'):
@@ -48,9 +49,12 @@ def parse_and_process_xml(xml_data):
             transport = session.query(Transport).filter_by(uNumber=u_number).first()
 
             if not transport:
-                # Проверяем, существует ли уже задача с таким uNumber и task_name='new_car'
                 db_updater.add_task('new_car', lot, u_number)
             else:
+                transport_numbers_in_db.discard(u_number)
+
+                transport.parser_1c = 1
+                session.commit()
                 # Проверяем соответствие склада
                 storage = session.query(Storage).filter_by(id=transport.storage_id).first()
                 if storage.id != storage_id:
@@ -69,6 +73,13 @@ def parse_and_process_xml(xml_data):
                     if transport.x != latitude or transport.y != longitude:
                         # Координаты отличаются, записываем задачу в ParserTasks
                         db_updater.add_task('new_cords', lot, u_number, db_updater.update_coordinates(transport.uNumber, latitude, longitude))
+                session.commit()
+
+        if transport_numbers_in_db:
+            session.query(Transport).filter(Transport.uNumber.in_(transport_numbers_in_db)).update(
+                {Transport.parser_1c: 0}, synchronize_session=False
+            )
+        session.commit()
 
 
         for storage_element in root.findall('ДанныеПоСкладу'):

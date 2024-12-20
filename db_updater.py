@@ -1,10 +1,34 @@
 import xml.etree.ElementTree as ET
-
+from sqlalchemy import update
 from models import Transport, TransferTasks, get_engine, create_session, TransportModel, Storage, ParserTasks
 from datetime import datetime
 
 
 engine = get_engine()
+
+def reset_parser_1c():
+    """
+    Устанавливает disable_virtual_operator = 0 для всех записей, где parser_1c = 0.
+    """
+    # Создаем сессию
+    session = create_session(engine)
+
+    try:
+        # Выполняем обновление
+        session.execute(
+            update(Transport).where(Transport.parser_1c == 0).values(disable_virtual_operator=1)
+        )
+        # Сохраняем изменения
+        session.commit()
+        print("Записи успешно обновлены.")
+    except Exception as e:
+        # Откатываем изменения в случае ошибки
+        session.rollback()
+        print(f"Ошибка при обновлении записей: {e}")
+    finally:
+        # Закрываем сессию
+        session.close()
+
 
 
 def add_task(task_name, info, variable, task_completed=0):
@@ -106,11 +130,11 @@ def update_storage(u_number, new_storage):
         )
         session.add(transfer_task)
         session.commit()
-        print(f"Менеджер для машины {u_number} успешно обновлен.")
+        print(f"Склад для машины {u_number} успешно обновлен.")
         return 1
     except Exception as e:
         session.rollback()
-        print(f"Ошибка при обновлении менеджера: {e}")
+        print(f"Ошибка при обновлении склада: {e}")
         return 0
     finally:
         session.close()
