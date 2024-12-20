@@ -49,66 +49,27 @@ def parse_and_process_xml(xml_data):
 
             if not transport:
                 # Проверяем, существует ли уже задача с таким uNumber и task_name='new_car'
-                existing_task = session.query(ParserTasks).filter_by(variable=u_number, task_name='new_car').first()
-
-                if not existing_task:
-                    # Если задачи нет, создаем новую задачу
-                    new_task = ParserTasks(
-                        task_name='new_car',
-                        info=ET.tostring(lot, encoding='unicode'),
-                        variable=u_number
-                    )
-                    session.add(new_task)
-
+                db_updater.add_task('new_car', lot, u_number)
             else:
                 # Проверяем соответствие склада
                 storage = session.query(Storage).filter_by(id=transport.storage_id).first()
                 if storage.id != storage_id:
                     # Склад отличается, записываем задачу в ParserTasks
-                    new_task = ParserTasks(
-                        task_name='new_storage',
-                        info=ET.tostring(lot, encoding='unicode'),
-                        variable=u_number,
-                        task_completed=db_updater.update_storage(transport.uNumber, storage_id)
-                    )
-                    session.add(new_task)
+                    db_updater.add_task('new_storage', lot, u_number, db_updater.update_storage(transport.uNumber, storage_id))
                 if transport.model_id != transport_model:
                     # Модель ТС отличается, записываем задачу в ParserTasks
-                    new_task = ParserTasks(
-                        task_name='transport_model_change',
-                        info=ET.tostring(lot, encoding='unicode'),
-                        variable=u_number,
-                        task_completed = db_updater.update_transport(transport.uNumber, transport_model)
-                    )
-                    session.add(new_task)
+                    db_updater.add_task('transport_model_change', lot, u_number, db_updater.update_transport(transport.uNumber, transport_model))
                 if transport.manager != manager:
                     # Манагер отличается, записываем задачу в ParserTasks
-                    new_task = ParserTasks(
-                        task_name='new_client',
-                        info=ET.tostring(lot, encoding='unicode'),
-                        variable=u_number,
-                        task_completed = db_updater.update_manager(transport.uNumber, manager)
-                    )
-                    session.add(new_task)
+                    db_updater.add_task('new_manager', lot, u_number, db_updater.update_manager(transport.uNumber, manager))
                 if transport.customer != client:
                     # Клиент отличается, записываем задачу в ParserTasks
-                    new_task = ParserTasks(
-                        task_name='new_manager',
-                        info=ET.tostring(lot, encoding='unicode'),
-                        variable=u_number,
-                        task_completed = db_updater.update_client(transport.uNumber, client)
-                    )
-                    session.add(new_task)
+                    db_updater.add_task('new_client', lot, u_number, db_updater.update_client(transport.uNumber, client))
                 if latitude != 0 or longitude != 0:
                     if transport.x != latitude or transport.y != longitude:
                         # Координаты отличаются, записываем задачу в ParserTasks
-                        new_task = ParserTasks(
-                            task_name='new_cords',
-                            info=ET.tostring(lot, encoding='unicode'),
-                            variable=u_number,
-                        task_completed = db_updater.update_coordinates(transport.uNumber, latitude, longitude)
-                        )
-                        session.add(new_task)
+                        db_updater.add_task('new_cords', lot, u_number, db_updater.update_coordinates(transport.uNumber, latitude, longitude))
+
 
         for storage_element in root.findall('ДанныеПоСкладу'):
             storage_id = int(storage_element.get('ИДСклада').lstrip('0'))

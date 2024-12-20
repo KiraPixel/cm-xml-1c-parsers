@@ -1,9 +1,30 @@
-from models import Transport, TransferTasks, get_engine, create_session, TransportModel, Storage
+import xml.etree.ElementTree as ET
+
+from models import Transport, TransferTasks, get_engine, create_session, TransportModel, Storage, ParserTasks
 from datetime import datetime
+
+
+engine = get_engine()
+
+
+def add_task(task_name, info, variable, task_completed=0):
+    session = create_session(engine)
+
+    existing_task = session.query(ParserTasks).filter_by(variable=variable, task_name=task_name, task_completed=0).first()
+    if not existing_task:
+        new_task = ParserTasks(
+            task_name=task_name,
+            info=ET.tostring(info, encoding='unicode'),
+            variable=variable,
+            task_completed=task_completed
+        )
+        session.add(new_task)
+        session.commit()
+    session.close()
+
 
 def create_new_transport(u_number, storage_id, model_id, x, y, customer, manager):
     """Создает новую машину в базе данных"""
-    engine = get_engine()
     session = create_session(engine)
 
     try:
@@ -31,7 +52,6 @@ def create_new_transport(u_number, storage_id, model_id, x, y, customer, manager
 
 def create_new_storage(storage_id, storage_name, storage_type, region, address, organization):
     """Создает новую машину в базе данных"""
-    engine = get_engine()
     session = create_session(engine)
 
     try:
@@ -58,7 +78,6 @@ def create_new_storage(storage_id, storage_name, storage_type, region, address, 
 
 def update_storage(u_number, new_storage):
     """Обновляет менеджера в базе данных и фиксирует изменение в tasks_transport_transfer"""
-    engine = get_engine()
     session = create_session(engine)
 
     try:
@@ -99,7 +118,6 @@ def update_storage(u_number, new_storage):
 
 def update_transport(u_number, transport_model_id):
     """Обновляет модель в базе данных"""
-    engine = get_engine()
     session = create_session(engine)
 
     try:
@@ -132,7 +150,6 @@ def update_transport(u_number, transport_model_id):
 
 def update_manager(u_number, new_manager):
     """Обновляет менеджера в базе данных и фиксирует изменение в tasks_transport_transfer"""
-    engine = get_engine()
     session = create_session(engine)
 
     try:
@@ -173,7 +190,6 @@ def update_manager(u_number, new_manager):
 
 def update_client(u_number, new_client):
     """Обновляет клиента в базе данных и фиксирует изменение в tasks_transport_transfer"""
-    engine = get_engine()
     session = create_session(engine)
 
     try:
@@ -213,7 +229,6 @@ def update_client(u_number, new_client):
 
 def update_coordinates(u_number, x, y):
     """Обновляет координаты машины в базе данных и фиксирует изменение в tasks_transport_transfer"""
-    engine = get_engine()
     session = create_session(engine)
 
     try:
