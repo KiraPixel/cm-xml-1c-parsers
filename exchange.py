@@ -2,10 +2,7 @@ from exchangelib import Credentials, Account, Message, FileAttachment
 import config
 
 def check_lot_xml():
-    return _check_email(subject="Выгрузка по лотам", file_name="Выгрузка по лотам.xml")
-
-def check_storage_xl():
-    return _check_email(subject="Выгрузка по складам", file_name="Выгрузка по складам.xml")
+    return _check_email(subject="Выгрузка по арендным лотам/складам.xml", file_name="Выгрузка по арендным лотамскладам.xml")
 
 def _check_email(subject, file_name):
     """
@@ -31,19 +28,3 @@ def _check_email(subject, file_name):
                     return attachment.content.decode('utf-8')
 
     return None
-
-# Пример использования
-if __name__ == "__main__":
-    lot_data = check_lot_xml()
-    if lot_data:
-        print("Выгрузка по лотам найдена:")
-        print(lot_data)
-    else:
-        print("Письмо или файл 'Выгрузка по лотам.xml' не найдено.")
-
-    storage_data = check_storage_xl()
-    if storage_data:
-        print("Выгрузка по складам найдена:")
-        print(storage_data)
-    else:
-        print("Письмо или файл 'Выгрузка по складам.xml' не найдено.")
