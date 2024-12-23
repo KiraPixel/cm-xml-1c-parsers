@@ -2,7 +2,7 @@ from exchangelib import Credentials, Account, Message, FileAttachment
 import config
 
 def check_lot_xml():
-    return _check_email(subject="Выгрузка по арендным лотам/складам.xml", file_name="Выгрузка по арендным лотамскладам.xml")
+    return _check_email(subject="Выгрузка в СЭБ арендного парка и складов.xml", file_name="Выгрузка в СЭБ арендного парка и складов.xml")
 
 def _check_email(subject, file_name):
     """
