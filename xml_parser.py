@@ -31,6 +31,26 @@ def parse_and_process_xml(xml_data):
     try:
         root = ET.fromstring(xml_data)
 
+        for storage_element in root.findall('ДанныеПоСкладу'):
+            storage_id = int(storage_element.get('ИДСклада').lstrip('0'))
+            storage_name = storage_element.get('Наименование').strip()
+            storage_type = storage_element.get('ТипСклада')
+            region = storage_element.get('Регион')
+            address = parse_float(storage_element.get('Адрес'))
+            organization = parse_float(storage_element.get('Организация'))
+
+            storage_query = session.query(Storage).filter_by(id=storage_id).first()
+
+            if not storage_query:
+                new_task = ParserTasks(
+                    task_name='new_storage',
+                    info=ET.tostring(storage_element, encoding='unicode'),
+                    variable=storage_id
+                )
+                session.add(new_task)
+                db_updater.create_new_storage(storage_id, storage_name, storage_type, region, address, organization)
+
+
         all_transports = session.query(Transport.uNumber).all()
         transport_numbers_in_db = {t[0] for t in all_transports}
 
@@ -80,26 +100,6 @@ def parse_and_process_xml(xml_data):
                 {Transport.parser_1c: 0}, synchronize_session=False
             )
         session.commit()
-
-
-        for storage_element in root.findall('ДанныеПоСкладу'):
-            storage_id = int(storage_element.get('ИДСклада').lstrip('0'))
-            storage_name = storage_element.get('Наименование').strip()
-            storage_type = storage_element.get('ТипСклада')
-            region = storage_element.get('Регион')
-            address = parse_float(storage_element.get('Адрес'))
-            organization = parse_float(storage_element.get('Организация'))
-
-            storage_query = session.query(Storage).filter_by(id=storage_id).first()
-
-            if not storage_query:
-                new_task = ParserTasks(
-                    task_name='new_storage',
-                    info=ET.tostring(storage_element, encoding='unicode'),
-                    variable=storage_id
-                )
-                session.add(new_task)
-                db_updater.create_new_storage(storage_id, storage_name, storage_type, region, address, organization)
 
         session.commit()
     except Exception as e:
