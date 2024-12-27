@@ -263,8 +263,12 @@ def update_coordinates(u_number, x, y):
             return 0
 
         # Обновляем координаты
-        transport.x = x
-        transport.y = y
+        if x is None or y is None:
+            transport.x = 0
+            transport.y = 0
+        else:
+            transport.x = x
+            transport.y = y
         session.commit()
         print(f"Координаты для машины {u_number} успешно обновлены.")
         return 1
