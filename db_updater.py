@@ -140,6 +140,60 @@ def update_storage(u_number, new_storage):
         session.close()
 
 
+def update_vin(u_number, new_vin):
+    """Обновляет vin в базе данных"""
+    session = create_session(engine)
+
+    try:
+        # Ищем машину по uNumber
+        transport = session.query(Transport).filter_by(uNumber=u_number).first()
+        if not transport:
+            print(f"Машина с номером {u_number} не найдена.")
+            return 0
+
+        # Сохраняем старое значение
+        old_vin = transport.vin
+        # Обновляем vin
+        transport.vin = new_vin
+
+        session.commit()
+        print(f"Vin для машины {u_number} успешно обновлен.")
+        return 1
+    except Exception as e:
+        session.rollback()
+        print(f"Ошибка при обновлении Vin: {e}")
+        return 0
+    finally:
+        session.close()
+
+
+def update_manufacture_year(u_number, new_manufacture_year):
+    """Обновляет manufactory_year в базе данных"""
+    session = create_session(engine)
+
+    try:
+        # Ищем машину по uNumber
+        transport = session.query(Transport).filter_by(uNumber=u_number).first()
+        if not transport:
+            print(f"Машина с номером {u_number} не найдена.")
+            return 0
+
+        # Сохраняем старое значение
+        manufacture_year = transport.manufacture_year
+        # Обновляем new_manufacture_year
+        transport.manufacture_year = new_manufacture_year
+
+        session.commit()
+        print(f"manufacture_year для машины {u_number} успешно обновлен.")
+        return 1
+    except Exception as e:
+        session.rollback()
+        print(f"Ошибка при обновлении manufacture_year: {e}")
+        return 0
+    finally:
+        session.close()
+
+
 def update_transport(u_number, transport_model_id):
     """Обновляет модель в базе данных"""
     session = create_session(engine)

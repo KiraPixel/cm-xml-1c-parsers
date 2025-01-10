@@ -62,6 +62,8 @@ def parse_and_process_xml(xml_data):
             client = lot.get('Контрагент').strip()
             client = clean_string(client)
             transport_model = lot.get('ИДМодели')
+            transport_vin = lot.get('Серия')
+            transport_year = lot.get('СерияГодВыпуска')
             manager = lot.get('ОтветственныйМенеджер')
             latitude = parse_float(lot.get('Широта'))
             longitude = parse_float(lot.get('Долгота'))
@@ -87,6 +89,12 @@ def parse_and_process_xml(xml_data):
                 if transport.model_id != transport_model:
                     # Модель ТС отличается, записываем задачу в ParserTasks
                     db_updater.add_task('transport_model_change', lot, u_number, db_updater.update_transport(transport.uNumber, transport_model))
+                if transport.vin != transport_vin:
+                    # VIN отличается, записываем задачу в ParserTasks
+                    db_updater.add_task('new_vin', lot, u_number, db_updater.update_vin(transport.uNumber, transport_vin))
+                if transport.manufacture_year != transport_year:
+                    # Год ТС отличается, записываем задачу в ParserTasks
+                    db_updater.add_task('new_manufacture_year', lot, u_number, db_updater.update_manufacture_year(transport.uNumber, transport_year))
                 if transport.manager != manager:
                     # Манагер отличается, записываем задачу в ParserTasks
                     db_updater.add_task('new_manager', lot, u_number, db_updater.update_manager(transport.uNumber, manager))

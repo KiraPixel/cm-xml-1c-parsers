@@ -11,6 +11,8 @@ class Transport(Base):
     id = Column(Integer, primary_key=True)
     storage_id = Column(Integer, nullable=False)
     model_id = Column(Integer, nullable=False)
+    vin = Column(Text)
+    manufacture_year = Column(Text)
     uNumber = Column(Text)
     x = Column(Float, default=0)
     y = Column(Float, default=0)
