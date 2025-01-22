@@ -77,35 +77,40 @@ def parse_and_process_xml(xml_data):
 
             if not transport:
                 db_updater.add_task('new_car', lot, u_number)
-            else:
-                transport_numbers_in_db.discard(u_number)
+                continue
 
-                transport.parser_1c = 1
-                session.commit()
+            transport_numbers_in_db.discard(u_number)
 
-                if transport.storage_id != storage_id:
-                    # Склад отличается, записываем задачу в ParserTasks
-                    db_updater.add_task('new_storage', lot, u_number, db_updater.update_storage(transport.uNumber, storage_id))
-                if transport.model_id != transport_model:
-                    # Модель ТС отличается, записываем задачу в ParserTasks
-                    db_updater.add_task('transport_model_change', lot, u_number, db_updater.update_transport(transport.uNumber, transport_model))
-                if transport.vin != transport_vin:
-                    # VIN отличается, записываем задачу в ParserTasks
-                    db_updater.add_task('new_vin', lot, u_number, db_updater.update_vin(transport.uNumber, transport_vin))
-                if transport.manufacture_year != transport_year:
-                    # Год ТС отличается, записываем задачу в ParserTasks
-                    db_updater.add_task('new_manufacture_year', lot, u_number, db_updater.update_manufacture_year(transport.uNumber, transport_year))
-                if transport.manager != manager:
-                    # Манагер отличается, записываем задачу в ParserTasks
-                    db_updater.add_task('new_manager', lot, u_number, db_updater.update_manager(transport.uNumber, manager))
-                if transport.customer != client:
-                    # Клиент отличается, записываем задачу в ParserTasks
-                    db_updater.add_task('new_client', lot, u_number, db_updater.update_client(transport.uNumber, client))
-                if transport.x != latitude or transport.y != longitude:
-                    #print(f'cords: {transport.x} != {latitude} or {transport.y} != {longitude}')
-                    # Координаты отличаются, записываем задачу в ParserTasks
-                    db_updater.add_task('new_cords', lot, u_number, db_updater.update_coordinates(transport.uNumber, latitude, longitude))
-                session.commit()
+            # хардкод против спамящий ТС
+            if transport.uNumber in ['I 02834', 'I 01983', 'E 00789']:
+                continue
+
+            transport.parser_1c = 1
+            session.commit()
+
+            if transport.storage_id != storage_id:
+                # Склад отличается, записываем задачу в ParserTasks
+                db_updater.add_task('new_storage', lot, u_number, db_updater.update_storage(transport.uNumber, storage_id))
+            if transport.model_id != transport_model:
+                # Модель ТС отличается, записываем задачу в ParserTasks
+                db_updater.add_task('transport_model_change', lot, u_number, db_updater.update_transport(transport.uNumber, transport_model))
+            if transport.vin != transport_vin:
+                # VIN отличается, записываем задачу в ParserTasks
+                db_updater.add_task('new_vin', lot, u_number, db_updater.update_vin(transport.uNumber, transport_vin))
+            if transport.manufacture_year != transport_year:
+                # Год ТС отличается, записываем задачу в ParserTasks
+                db_updater.add_task('new_manufacture_year', lot, u_number, db_updater.update_manufacture_year(transport.uNumber, transport_year))
+            if transport.manager != manager:
+                # Манагер отличается, записываем задачу в ParserTasks
+                db_updater.add_task('new_manager', lot, u_number, db_updater.update_manager(transport.uNumber, manager))
+            if transport.customer != client:
+                # Клиент отличается, записываем задачу в ParserTasks
+                db_updater.add_task('new_client', lot, u_number, db_updater.update_client(transport.uNumber, client))
+            if transport.x != latitude or transport.y != longitude:
+                #print(f'cords: {transport.x} != {latitude} or {transport.y} != {longitude}')
+                # Координаты отличаются, записываем задачу в ParserTasks
+                db_updater.add_task('new_cords', lot, u_number, db_updater.update_coordinates(transport.uNumber, latitude, longitude))
+            session.commit()
 
         if transport_numbers_in_db:
             session.query(Transport).filter(Transport.uNumber.in_(transport_numbers_in_db)).update(
