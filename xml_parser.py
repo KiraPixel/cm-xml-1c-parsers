@@ -82,7 +82,7 @@ def parse_and_process_xml(xml_data):
             transport_numbers_in_db.discard(u_number)
 
             # хардкод против спамящий ТС
-            if transport.uNumber in ['I 02834', 'I 01983', 'E 00789']:
+            if transport.uNumber in ['I 01983',]:
                 continue
 
             transport.parser_1c = 1
