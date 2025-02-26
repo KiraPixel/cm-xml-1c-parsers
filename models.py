@@ -52,6 +52,7 @@ class ParserTasks(Base):
     info = Column(String(100))
     variable = Column(String(100))
     task_completed = Column(Integer, default=0)
+    task_manager = Column(String, default='xml_parser')
 
 
 class TransferTasks(Base):

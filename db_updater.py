@@ -30,12 +30,16 @@ def reset_parser_1c():
         session.close()
 
 
-
 def add_task(task_name, info, variable, task_completed=0):
     session = create_session(engine)
 
-    existing_task = session.query(ParserTasks).filter_by(variable=variable, task_name=task_name, task_completed=0).first()
-    if not existing_task:
+    existing_task = session.query(ParserTasks).filter_by(variable=variable, task_name=task_name,
+                                                         task_completed=0).first()
+    if existing_task:
+        if task_completed == 1:
+            existing_task.task_completed = 1
+            session.commit()
+    else:
         new_task = ParserTasks(
             task_name=task_name,
             info=ET.tostring(info, encoding='unicode'),
@@ -44,6 +48,7 @@ def add_task(task_name, info, variable, task_completed=0):
         )
         session.add(new_task)
         session.commit()
+
     session.close()
 
 

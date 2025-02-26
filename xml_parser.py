@@ -7,6 +7,7 @@ from models import Transport, Storage, TransportModel, ParserTasks, get_engine, 
 import unicodedata
 import html
 import db_updater
+import api_cm
 
 
 def clean_string(s):
@@ -76,13 +77,19 @@ def parse_and_process_xml(xml_data):
 
 
             if not transport:
-                db_updater.add_task('new_car', lot, u_number)
+                success = 0
+                request_to_api = api_cm.add_new_car(u_number, transport_model, storage_id, transport_vin,
+                                   transport_year, client, manager, latitude, longitude, 0)
+                if request_to_api == 'ok':
+                    success = 1
+                    print(f'Новая машина {u_number} успешно добавлена')
+                db_updater.add_task('new_car', lot, u_number, success)
                 continue
 
             transport_numbers_in_db.discard(u_number)
 
             # хардкод против спамящий ТС
-            if transport.uNumber in ['I 01983',]:
+            if transport.uNumber in ['I 01983', 'I 03922', 'E 01927']:
                 continue
 
             transport.parser_1c = 1
