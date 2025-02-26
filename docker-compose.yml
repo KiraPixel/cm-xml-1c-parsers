@@ -10,6 +10,8 @@ services:
       MAIL_MAIL: ${MAIL_MAIL}
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
+      CM_API_URL: ${CM_API_URL}
+      CM_API_KEY: ${CM_API_KEY}
     stdin_open: true
     tty: true
     restart: always
