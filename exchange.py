@@ -16,15 +16,16 @@ def _check_email(subject, file_name):
     account = Account(config.MAIL_MAIL, credentials=credentials, autodiscover=True)
 
     # Поиск письма во входящих
-    for item in account.inbox.filter(subject=subject, is_read=False):
-        if isinstance(item, Message):
-            for attachment in item.attachments:
-                if isinstance(attachment, FileAttachment) and attachment.name == file_name:
-                    # Читаем содержимое XML-файла
-                    # Пометить письмо как прочитанное
-                    item.is_read = True
-                    item.save()
-                    # Читаем содержимое XML-файла
-                    return attachment.content.decode('utf-8')
+    for folder in account.inbox.walk():
+        for item in folder.filter(subject=subject, is_read=False):
+            if isinstance(item, Message):
+                for attachment in item.attachments:
+                    if isinstance(attachment, FileAttachment) and attachment.name == file_name:
+                        # Читаем содержимое XML-файла
+                        # Пометить письмо как прочитанное
+                        item.is_read = True
+                        item.save()
+                        # Читаем содержимое XML-файла
+                        return attachment.content.decode('utf-8')
 
     return None
