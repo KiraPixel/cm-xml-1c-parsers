@@ -1,4 +1,4 @@
-from exchangelib import Credentials, Account, Message, FileAttachment
+from exchangelib import Credentials, Account, Message, FileAttachment, Configuration, DELEGATE
 import config
 
 def check_lot_xml():
@@ -12,8 +12,11 @@ def _check_email(subject, file_name):
     :return: Содержимое XML-файла или None, если письмо или файл не найдены.
     """
     # Учетные данные
-    credentials = Credentials(config.MAIL_USERNAME, config.MAIL_PASSWORD)
-    account = Account(config.MAIL_MAIL, credentials=credentials, autodiscover=True)
+    mail_config = Configuration(
+        server=config.sender_host,
+        credentials=Credentials(username=config.full_username, password=config.sender_password)
+    )
+    account = Account(config.sender_email, config=mail_config, autodiscover=False, access_type=DELEGATE)
 
     # Поиск письма во входящих
     for folder in account.inbox.walk():
