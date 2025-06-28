@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: xml-1c-parser
-          image: ghcr.io/kirapixel/cm-xml-1c-parser:20250626203056
+          image: ghcr.io/kirapixel/cm-xml-1c-parser:20250628121907
           envFrom:
             - secretRef:
                 name: flask-cm-spectr-secret
