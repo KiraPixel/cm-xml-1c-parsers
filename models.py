@@ -69,6 +69,13 @@ class TransferTasks(Base):
     date = Column(Integer())
 
 
+class SystemSettings(Base):
+    __tablename__ = 'system_settings'
+    id = Column(Integer, primary_key=True)
+    enable_voperator = Column(Integer)
+    enable_xml_parser = Column(Integer)
+    enable_db_cashing = Column(Integer)
+
 def get_engine():
     """Возвращает объект engine для базы данных"""
     return create_engine(config.SQLALCHEMY_DATABASE_URL)

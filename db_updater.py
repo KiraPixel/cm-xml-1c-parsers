@@ -1,10 +1,22 @@
 import xml.etree.ElementTree as ET
 from sqlalchemy import update
-from models import Transport, TransferTasks, get_engine, create_session, TransportModel, Storage, ParserTasks
+from models import Transport, TransferTasks, get_engine, create_session, TransportModel, Storage, ParserTasks, \
+    SystemSettings
 from datetime import datetime
 
 
 engine = get_engine()
+
+
+def check_status():
+    try:
+        session = create_session(engine)
+        result = session.query(SystemSettings).filter(SystemSettings.id == 0).first()
+        session.close()
+        return result.enable_xml_parser
+    except Exception as e:
+        print('Ошибка подключения к БД', e)
+        return 0
 
 
 def add_task(task_name, info, variable, task_completed=0):
