@@ -18,7 +18,7 @@ class Transport(Base):
     y = Column(Float, default=0)
     customer = Column(Text)
     manager = Column(Text)
-    disable_virtual_operator = Column(Integer, default=0)
+    alert_preset = Column(Integer, default=0)
     parser_1c = Column(Integer, default=0)
 
 

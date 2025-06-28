@@ -6,29 +6,6 @@ from datetime import datetime
 
 engine = get_engine()
 
-def reset_parser_1c():
-    """
-    Устанавливает disable_virtual_operator = 0 для всех записей, где parser_1c = 0.
-    """
-    # Создаем сессию
-    session = create_session(engine)
-
-    try:
-        # Выполняем обновление
-        session.execute(
-            update(Transport).where(Transport.parser_1c == 0).values(disable_virtual_operator=1)
-        )
-        # Сохраняем изменения
-        session.commit()
-        print("Записи успешно обновлены.")
-    except Exception as e:
-        # Откатываем изменения в случае ошибки
-        session.rollback()
-        print(f"Ошибка при обновлении записей: {e}")
-    finally:
-        # Закрываем сессию
-        session.close()
-
 
 def add_task(task_name, info, variable, task_completed=0):
     session = create_session(engine)

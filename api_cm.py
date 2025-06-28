@@ -34,7 +34,7 @@ def get_cm_health():
         return False
 
 
-def add_new_car(uNumber, model_id, storage_id, VIN, year, customer, manager, x=0, y=0, disable_virtual_operator=0):
+def add_new_car(uNumber, model_id, storage_id, VIN, year, customer, manager, x=0, y=0, parser_1c=1):
     payload = {
         "uNumber": uNumber,
         "model_id": model_id,
@@ -45,7 +45,7 @@ def add_new_car(uNumber, model_id, storage_id, VIN, year, customer, manager, x=0
         "manager": manager,
         "x": x,
         "y": y,
-        "disable_virtual_operator": disable_virtual_operator
+        "parser_1c": parser_1c
     }
 
     try:
