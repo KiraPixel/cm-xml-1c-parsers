@@ -1,3 +1,4 @@
+import logging
 import xml.etree.ElementTree as ET
 from sqlalchemy import update
 from models import Transport, TransferTasks, get_engine, create_session, TransportModel, Storage, ParserTasks, \
@@ -6,6 +7,7 @@ from datetime import datetime
 
 
 engine = get_engine()
+logger = logging.getLogger('cm_xml_1c_parser')
 
 
 def check_status():
@@ -15,7 +17,7 @@ def check_status():
         session.close()
         return result.enable_xml_parser
     except Exception as e:
-        print('Ошибка подключения к БД', e)
+        logger.error('Ошибка подключения к БД', e)
         return 0
 
 
@@ -58,11 +60,11 @@ def create_new_transport(u_number, storage_id, model_id, x, y, customer, manager
         )
         session.add(new_transport)
         session.commit()
-        print(f"Машина {u_number} успешно создана.")
+        logger.info(f"Машина {u_number} успешно создана.")
         return 1
     except Exception as e:
         session.rollback()
-        print(f"Ошибка при создании машины: {e}")
+        logger.error(f"Ошибка при создании машины: {e}")
         return 0
     finally:
         session.close()
@@ -84,11 +86,38 @@ def create_new_storage(storage_id, storage_name, storage_type, region, address, 
         )
         session.add(new_storage)
         session.commit()
-        print(f"Склад {storage_id} - {storage_name} успешно создан.")
+        logger.info(f"Склад {storage_id} - {storage_name} успешно создан.")
         return 1
     except Exception as e:
         session.rollback()
-        print(f"Ошибка при создании склада: {e}")
+        logger.error(f"Ошибка при создании склада: {e}")
+        return 0
+    finally:
+        session.close()
+
+
+def create_new_transport_model(tm_id, tm_type, model, category):
+    """Создает новую машину в базе данных"""
+    session = create_session(engine)
+    tm_query = session.query(TransportModel).filter_by(id=tm_id).first()
+    if tm_query:
+        return 0
+    try:
+        # Создаем новый объект Transport Model
+        new_tm = TransportModel(
+            id=tm_id,
+            name=model,
+            type=tm_type,
+            machine_type = category
+
+        )
+        session.add(new_tm)
+        session.commit()
+        logger.info(f"Модель транспорта {tm_id} - [{tm_type}] - {model} успешно создана.")
+        return 1
+    except Exception as e:
+        session.rollback()
+        logger.error(f"Ошибка при создании модели транспорта: {e}")
         return 0
     finally:
         session.close()
@@ -102,7 +131,7 @@ def update_storage(u_number, new_storage):
         # Ищем машину по uNumber
         transport = session.query(Transport).filter_by(uNumber=u_number).first()
         if not transport:
-            print(f"Машина с номером {u_number} не найдена.")
+            logger.info(f"Машина с номером {u_number} не найдена.")
             return 0
 
         # Сохраняем старое значение
@@ -124,11 +153,11 @@ def update_storage(u_number, new_storage):
         )
         session.add(transfer_task)
         session.commit()
-        print(f"Склад для машины {u_number} успешно обновлен.")
+        logger.info(f"Склад для машины {u_number} успешно обновлен.")
         return 1
     except Exception as e:
         session.rollback()
-        print(f"Ошибка при обновлении склада: {e}")
+        logger.error(f"Ошибка при обновлении склада: {e}")
         return 0
     finally:
         session.close()
@@ -142,7 +171,7 @@ def update_vin(u_number, new_vin):
         # Ищем машину по uNumber
         transport = session.query(Transport).filter_by(uNumber=u_number).first()
         if not transport:
-            print(f"Машина с номером {u_number} не найдена.")
+            logger.info(f"Машина с номером {u_number} не найдена.")
             return 0
 
         # Сохраняем старое значение
@@ -151,11 +180,11 @@ def update_vin(u_number, new_vin):
         transport.vin = new_vin
 
         session.commit()
-        print(f"Vin для машины {u_number} успешно обновлен.")
+        logger.info(f"Vin для машины {u_number} успешно обновлен.")
         return 1
     except Exception as e:
         session.rollback()
-        print(f"Ошибка при обновлении Vin: {e}")
+        logger.error(f"Ошибка при обновлении Vin: {e}")
         return 0
     finally:
         session.close()
@@ -169,7 +198,7 @@ def update_manufacture_year(u_number, new_manufacture_year):
         # Ищем машину по uNumber
         transport = session.query(Transport).filter_by(uNumber=u_number).first()
         if not transport:
-            print(f"Машина с номером {u_number} не найдена.")
+            logger.info(f"Машина с номером {u_number} не найдена.")
             return 0
 
         # Сохраняем старое значение
@@ -178,11 +207,11 @@ def update_manufacture_year(u_number, new_manufacture_year):
         transport.manufacture_year = new_manufacture_year
 
         session.commit()
-        print(f"manufacture_year для машины {u_number} успешно обновлен.")
+        logger.info(f"manufacture_year для машины {u_number} успешно обновлен.")
         return 1
     except Exception as e:
         session.rollback()
-        print(f"Ошибка при обновлении manufacture_year: {e}")
+        logger.error(f"Ошибка при обновлении manufacture_year: {e}")
         return 0
     finally:
         session.close()
@@ -196,7 +225,7 @@ def update_transport(u_number, transport_model_id):
         # Ищем машину по uNumber
         transport = session.query(Transport).filter_by(uNumber=u_number).first()
         if not transport:
-            print(f"Машина с номером {u_number} не найдена.")
+            logger.info(f"Машина с номером {u_number} не найдена.")
             return 0
 
         # Проверяем есть ли такая модель
@@ -204,17 +233,17 @@ def update_transport(u_number, transport_model_id):
         if model_check:
             # Обновляем модель
             transport.model_id = transport_model_id
-            print(f"Модель ТС для машины {u_number} успешно обновлен.")
+            logger.info(f"Модель ТС для машины {u_number} успешно обновлен.")
             session.commit()
             return 1
         else:
             # Модели нет
-            print(f"Ошибка при обновлении модели тс {u_number} - {transport_model_id}")
+            logger.info(f"Ошибка при обновлении модели тс {u_number} - {transport_model_id}")
             session.commit()
             return 0
     except Exception as e:
         session.rollback()
-        print(f"Ошибка при обновлении модели тс: {e}")
+        logger.error(f"Ошибка при обновлении модели тс: {e}")
         return 0
     finally:
         session.close()
@@ -228,7 +257,7 @@ def update_manager(u_number, new_manager):
         # Ищем машину по uNumber
         transport = session.query(Transport).filter_by(uNumber=u_number).first()
         if not transport:
-            print(f"Машина с номером {u_number} не найдена.")
+            logger.info(f"Машина с номером {u_number} не найдена.")
             return 0
 
         # Сохраняем старое значение
@@ -250,11 +279,11 @@ def update_manager(u_number, new_manager):
         )
         session.add(transfer_task)
         session.commit()
-        print(f"Менеджер для машины {u_number} успешно обновлен.")
+        logger.info(f"Менеджер для машины {u_number} успешно обновлен.")
         return 1
     except Exception as e:
         session.rollback()
-        print(f"Ошибка при обновлении менеджера: {e}")
+        logger.error(f"Ошибка при обновлении менеджера: {e}")
         return 0
     finally:
         session.close()
@@ -268,7 +297,7 @@ def update_client(u_number, new_client):
         # Ищем машину по uNumber
         transport = session.query(Transport).filter_by(uNumber=u_number).first()
         if not transport:
-            print(f"Машина с номером {u_number} не найдена.")
+            logger.info(f"Машина с номером {u_number} не найдена.")
             return 0
 
         # Сохраняем старое значение
@@ -290,11 +319,11 @@ def update_client(u_number, new_client):
         )
         session.add(transfer_task)
         session.commit()
-        print(f"Клиент для машины {u_number} успешно обновлен.")
+        logger.info(f"Клиент для машины {u_number} успешно обновлен.")
         return 1
     except Exception as e:
         session.rollback()
-        print(f"Ошибка при обновлении клиента: {e}")
+        logger.error(f"Ошибка при обновлении клиента: {e}")
         return 0
     finally:
         session.close()
@@ -307,7 +336,7 @@ def update_coordinates(u_number, x, y):
         # Ищем машину по uNumber
         transport = session.query(Transport).filter_by(uNumber=u_number).first()
         if not transport:
-            print(f"Машина с номером {u_number} не найдена.")
+            logger.info(f"Машина с номером {u_number} не найдена.")
             return 0
 
         # Обновляем координаты
@@ -318,11 +347,11 @@ def update_coordinates(u_number, x, y):
             transport.x = x
             transport.y = y
         session.commit()
-        print(f"Координаты для машины {u_number} успешно обновлены.")
+        logger.info(f"Координаты для машины {u_number} успешно обновлены.")
         return 1
     except Exception as e:
         session.rollback()
-        print(f"Ошибка при обновлении координат: {e}")
+        logger.error(f"Ошибка при обновлении координат: {e}")
         return 0
     finally:
         session.close()

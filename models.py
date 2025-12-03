@@ -40,6 +40,7 @@ class TransportModel(Base):
     type = Column(String(100))
     name = Column(String(100))
     lift_type = Column(String(100))
+    machine_type = Column(String(100))
     engine = Column(String(100))
     country = Column(String(100))
 

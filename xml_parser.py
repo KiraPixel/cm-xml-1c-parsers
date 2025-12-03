@@ -1,3 +1,4 @@
+import logging
 import xml.etree.ElementTree as ET
 from idlelib.pyparse import trans
 from tabnanny import check
@@ -8,6 +9,9 @@ import unicodedata
 import html
 import db_updater
 import api_cm
+
+
+logger = logging.getLogger('cm_xml_1c_parser')
 
 
 def clean_string(s):
@@ -32,8 +36,10 @@ def parse_and_process_xml(xml_data):
 
     try:
         root = ET.fromstring(xml_data)
+        logger.debug('start parse_and_process_xml')
 
         for storage_element in root.findall('ДанныеПоСкладу'):
+            logger.debug(storage_element)
             storage_id = int(storage_element.get('ИДСклада').lstrip('0'))
             storage_name = storage_element.get('Наименование').strip()
             storage_type = storage_element.get('ТипСклада')
@@ -56,13 +62,33 @@ def parse_and_process_xml(xml_data):
         all_transports = session.query(Transport.uNumber).all()
         transport_numbers_in_db = {t[0] for t in all_transports}
 
+        lot_elements = root.findall('ДанныеПоЛоту')
+        lot_groups = {}
+        for lot in lot_elements:
+            u_number = lot.get('Лот')
+            if u_number not in lot_groups:
+                lot_groups[u_number] = []
+            lot_groups[u_number].append(lot)
+
+        clean_lots = []
+        for u_number, lots in lot_groups.items():
+            if len(lots) > 1:
+                logger.warning(f"Найдены дубликаты Лота {u_number}: {len(lots)} шт. Оставляем только один.")
+                clean_lots.append(lots[0])
+            else:
+                clean_lots.append(lots[0])
+
         #Проходим по элементам "ДанныеПоЛоту"
-        for lot in root.findall('ДанныеПоЛоту'):
+        for lot in clean_lots:
+            logger.debug(clean_lots)
             u_number = lot.get('Лот')
             storage_id = int(lot.get('КодСклада').lstrip('0'))
             client = lot.get('Контрагент').strip()
             client = clean_string(client)
-            transport_model = lot.get('ИДМодели')
+            transport_model_id = lot.get('ИДМодели')
+            tm_model = lot.get('Модель')
+            tm_type = lot.get('Направление')
+            tm_category = lot.get('Категория')
             transport_vin = lot.get('Серия')
             transport_year = lot.get('СерияГодВыпуска')
             manager = lot.get('ОтветственныйМенеджер')
@@ -74,23 +100,33 @@ def parse_and_process_xml(xml_data):
 
             # Проверяем, существует ли машина с данным uNumber
             transport = session.query(Transport).filter_by(uNumber=u_number).first()
+            # Проверяем, существует transport model с данным transport_model_id
+            tm_query = session.query(TransportModel).filter_by(id=transport_model_id).first()
 
+            if not tm_query:
+                new_task = ParserTasks(
+                    task_name='new_transport',
+                    info = lot.get('ИДМодели'),
+                    variable=transport_model_id
+                )
+                session.add(new_task)
+                db_updater.create_new_transport_model(transport_model_id, tm_type, tm_model, tm_category)
 
             if not transport:
                 success = 0
-                request_to_api = api_cm.add_new_car(u_number, transport_model, storage_id, transport_vin,
+                request_to_api = api_cm.add_new_car(u_number, transport_model_id, storage_id, transport_vin,
                                    transport_year, client, manager, latitude, longitude, 0)
                 if request_to_api == 'ok':
                     success = 1
-                    print(f'Новая машина {u_number} успешно добавлена')
+                    logger.info('Новая машина {u_number} успешно добавлена')
                 db_updater.add_task('new_car', lot, u_number, success)
                 continue
 
             transport_numbers_in_db.discard(u_number)
 
             # хардкод против спамящий ТС
-            if transport.uNumber in ['E 01815']:
-                continue
+            # if transport.uNumber in ['E 01815']:
+            #     continue
 
             transport.parser_1c = 1
             session.commit()
@@ -98,9 +134,9 @@ def parse_and_process_xml(xml_data):
             if transport.storage_id != storage_id:
                 # Склад отличается, записываем задачу в ParserTasks
                 db_updater.add_task('new_storage', lot, u_number, db_updater.update_storage(transport.uNumber, storage_id))
-            if transport.model_id != transport_model:
+            if transport.model_id != transport_model_id:
                 # Модель ТС отличается, записываем задачу в ParserTasks
-                db_updater.add_task('transport_model_change', lot, u_number, db_updater.update_transport(transport.uNumber, transport_model))
+                db_updater.add_task('transport_model_change', lot, u_number, db_updater.update_transport(transport.uNumber, transport_model_id))
             if transport.vin != transport_vin:
                 # VIN отличается, записываем задачу в ParserTasks
                 db_updater.add_task('new_vin', lot, u_number, db_updater.update_vin(transport.uNumber, transport_vin))
@@ -128,6 +164,6 @@ def parse_and_process_xml(xml_data):
         session.commit()
     except Exception as e:
         session.rollback()
-        print(f"Ошибка обработки XML: {e}")
+        logger.error(f"Ошибка обработки XML: {e}")
     finally:
         session.close()
