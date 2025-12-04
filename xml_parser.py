@@ -118,7 +118,7 @@ def parse_and_process_xml(xml_data):
                                    transport_year, client, manager, latitude, longitude, 0)
                 if request_to_api == 'ok':
                     success = 1
-                    logger.info('Новая машина {u_number} успешно добавлена')
+                    logger.info(f'Новая машина {u_number} успешно добавлена')
                 db_updater.add_task('new_car', lot, u_number, success)
                 continue
 
