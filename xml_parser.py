@@ -39,7 +39,7 @@ def parse_and_process_xml(xml_data):
         logger.debug('start parse_and_process_xml')
 
         for storage_element in root.findall('ДанныеПоСкладу'):
-            logger.debug(storage_element)
+            logger.debug(storage_element.attrib)
             storage_id = int(storage_element.get('ИДСклада').lstrip('0'))
             storage_name = storage_element.get('Наименование').strip()
             storage_type = storage_element.get('ТипСклада')
@@ -80,7 +80,7 @@ def parse_and_process_xml(xml_data):
 
         #Проходим по элементам "ДанныеПоЛоту"
         for lot in clean_lots:
-            logger.debug(clean_lots)
+            logger.debug({lot.attrib})
             u_number = lot.get('Лот')
             storage_id = int(lot.get('КодСклада').lstrip('0'))
             client = lot.get('Контрагент').strip()
@@ -106,7 +106,7 @@ def parse_and_process_xml(xml_data):
             if not tm_query:
                 new_task = ParserTasks(
                     task_name='new_transport',
-                    info = lot.get('ИДМодели'),
+                    info = lot.attrib,
                     variable=transport_model_id
                 )
                 session.add(new_task)
