@@ -80,7 +80,7 @@ def parse_and_process_xml(xml_data):
 
         #Проходим по элементам "ДанныеПоЛоту"
         for lot in clean_lots:
-            logger.debug({lot.attrib})
+            logger.debug(lot.attrib)
             u_number = lot.get('Лот')
             storage_id = int(lot.get('КодСклада').lstrip('0'))
             client = lot.get('Контрагент').strip()
